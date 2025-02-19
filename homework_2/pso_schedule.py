@@ -21,33 +21,50 @@ courses = [
    ("Манасоведение", "Бегалиев Э.С."),
 ]
 
+# Ограничения по количеству занятий
+course_limits = {
+   "Data Structure and Algorithms": (1, 2),
+   "English": (3, 5),
+   "Introduction to AI": (1, 2),
+   "Advanced Python": (1, 2),
+   "География Кыргызстана": (1, 2),
+   "История Кыргызстана": (1, 2),
+   "Манасоведение": (1, 2)
+}
+
 # PSO параметры
 w = 0.5  # Инерция
 c1 = 1.5  # Личное обучение
 c2 = 1.5  # Социальное обучение
-num_particles = 30  # Количество частиц
-iterations = 100  # Количество итераций
+num_particles = 50  # Количество частиц
+iterations = 200  # Количество итераций
 
 # Функция приспособленности (fitness function)
 def fitness(schedule):
    penalty = 0
+   course_counts = defaultdict(lambda: [0] * GROUP_NUM)
    for day in range(DAYS):
        for cls in range(CLASSES_PER_DAY):
            used_teachers = set()
            used_rooms = set()
-           used_courses = set()
            for group in range(GROUP_NUM):
                course, teacher, room = schedule[day][cls][group]
+               course_counts[course][group] += 1
                if teacher in used_teachers:
                    penalty += 5  # Штраф за конфликт преподавателя
                if room in used_rooms:
                    penalty += 3  # Штраф за конфликт аудитории
-               if course in used_courses:
-                   penalty += 2  # Штраф за повторяющийся предмет
                used_teachers.add(teacher)
                used_rooms.add(room)
-               used_courses.add(course)
-   return 1 / (1 + penalty)  # Чем меньше штрафов, тем лучше расписание
+   # Проверка выполнения ограничений по курсам
+   for course, counts in course_counts.items():
+       min_req, max_req = course_limits.get(course, (0, float('inf')))
+       for group_count in counts:
+           if group_count < min_req:
+               penalty += (min_req - group_count) * 3
+           elif group_count > max_req:
+               penalty += (group_count - max_req) * 3
+   return 1 / (1 + penalty)
 
 # Генерация начальных частиц (расписаний)
 def generate_random_schedule():
