@@ -1,10 +1,11 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from collections import defaultdict
 
 # Определение параметров задачи
 DAYS = 5
-CLASSES_PER_DAY = 4
+CLASSES_PER_DAY = 3
 COURSE_NUM = 7
 TEACHER_NUM = 7
 ROOM_NUM = 4
@@ -23,21 +24,25 @@ courses = [
 
 # Ограничения по количеству занятий
 course_limits = {
-   "Data Structure and Algorithms": (1, 2),
-   "English": (3, 5),
-   "Introduction to AI": (1, 2),
-   "Advanced Python": (1, 2),
-   "География Кыргызстана": (1, 2),
-   "История Кыргызстана": (1, 2),
-   "Манасоведение": (1, 2)
+   "Data Structure and Algorithms": (3, 3),
+   "English": (5, 5),
+   "Introduction to AI": (2, 2),
+   "Advanced Python": (2, 2),
+   "География Кыргызстана": (1, 1),
+   "История Кыргызстана": (1, 1),
+   "Манасоведение": (1, 1)
 }
 
 # PSO параметры
-w = 0.5  # Инерция
-c1 = 1.5  # Личное обучение
-c2 = 1.5  # Социальное обучение
-num_particles = 50  # Количество частиц
-iterations = 200  # Количество итераций
+w = 0.8  # Инерция
+c1 = 2  # Личное обучение
+c2 = 2  # Социальное обучение
+num_particles = 30  # Количество частиц
+iterations = 100  # Количество итераций
+
+# Логи для графиков
+fitness_log = []
+penalty_log = []
 
 # Функция приспособленности (fitness function)
 def fitness(schedule):
@@ -64,7 +69,9 @@ def fitness(schedule):
                penalty += (min_req - group_count) * 3
            elif group_count > max_req:
                penalty += (group_count - max_req) * 3
-   return 1 / (1 + penalty)
+   fitness_value = 1 / (1 + penalty)
+   penalty_log.append(penalty)
+   return fitness_value
 
 # Генерация начальных частиц (расписаний)
 def generate_random_schedule():
@@ -89,27 +96,47 @@ pbest = particles[:]
 pbest_scores = [fitness(p) for p in pbest]
 gbest = pbest[np.argmax(pbest_scores)]
 
-def update_velocity(velocity, particle, pbest, gbest):
-   for day in range(DAYS):
-       for cls in range(CLASSES_PER_DAY):
-           for group in range(GROUP_NUM):
-               r1, r2 = random.random(), random.random()
-               inertia = w * velocity[day][cls][group]
-               cognitive = c1 * r1 * (pbest[day][cls][group] != particle[day][cls][group])
-               social = c2 * r2 * (gbest[day][cls][group] != particle[day][cls][group])
-               velocity[day][cls][group] = inertia + cognitive + social
-   return velocity
-
 # Основной цикл оптимизации
-for _ in range(iterations):
+for iteration in range(iterations):
    for i in range(num_particles):
-       velocities[i] = update_velocity(velocities[i], particles[i], pbest[i], gbest)
+       for day in range(DAYS):
+           for cls in range(CLASSES_PER_DAY):
+               for group in range(GROUP_NUM):
+                   r1, r2 = random.random(), random.random()
+                   inertia = w * velocities[i][day][cls][group]
+                   cognitive = c1 * r1 * (pbest[i][day][cls][group] != particles[i][day][cls][group])
+                   social = c2 * r2 * (gbest[day][cls][group] != particles[i][day][cls][group])
+                   velocities[i][day][cls][group] = inertia + cognitive + social
        new_schedule = generate_random_schedule()
-       if fitness(new_schedule) > pbest_scores[i]:
+       new_fitness = fitness(new_schedule)
+       if new_fitness > pbest_scores[i]:
            pbest[i] = new_schedule
-           pbest_scores[i] = fitness(new_schedule)
-       if fitness(new_schedule) > fitness(gbest):
+           pbest_scores[i] = new_fitness
+       if new_fitness > fitness(gbest):
            gbest = new_schedule
+   fitness_log.append(fitness(gbest))
+
+# Построение графиков
+plt.figure(figsize=(14, 6))
+
+# График Fitness
+plt.subplot(1, 2, 1)
+plt.plot(range(iterations), fitness_log, label='Global Best Fitness')
+plt.xlabel('Iterations')
+plt.ylabel('Fitness')
+plt.title('Iterations vs Global Best Fitness')
+plt.legend()
+
+# График Penalty
+plt.subplot(1, 2, 2)
+plt.plot(range(iterations), penalty_log[:iterations], label='Penalty', color='red')
+plt.xlabel('Iterations')
+plt.ylabel('Penalty')
+plt.title('Iterations vs Penalty')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
 
 # Вывод оптимизированного расписания
 for day in range(DAYS):
