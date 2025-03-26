@@ -67,15 +67,15 @@ def predict_house_price(area, bedrooms, bathrooms, stories, mainroad, guestroom,
 
    return round(predicted_price, 2)
 
-# Пример использования функции
-predicted_price = predict_house_price(
-   area=5000, bedrooms=4, bathrooms=3, stories=2,
-   mainroad="yes", guestroom="no", basement="no",
-   hotwaterheating="no", airconditioning="yes",
-   parking=2, prefarea="yes", furnishingstatus="semi-furnished"
-)
+# # Пример использования функции
+# predicted_price = predict_house_price(
+#    area=5000, bedrooms=4, bathrooms=3, stories=2,
+#    mainroad="yes", guestroom="no", basement="no",
+#    hotwaterheating="no", airconditioning="yes",
+#    parking=2, prefarea="yes", furnishingstatus="semi-furnished"
+# )
 
-predicted_price
+# predicted_price
 
 
 if __name__ == "__main__":
