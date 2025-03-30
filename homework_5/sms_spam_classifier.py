@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
+import joblib
 
 # 1. Загрузка датасета
 url = "https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv"
@@ -39,3 +40,7 @@ def predict_spam(text):
 # 8. Примеры
 print(predict_spam("Congratulations! You won a $1000 Walmart gift card."))
 print(predict_spam("Hey, are we still on for dinner tonight?"))
+
+# 9. Сохраняем модель и векторайзер
+joblib.dump(model, "spam_model.joblib")
+joblib.dump(vectorizer, "tfidf_vectorizer.joblib")
